@@ -1,10 +1,10 @@
 ## Introduction
 Set of hotkeys & tools to make Windows multi monitor work much better
 
-## Requirements
+## Installation
 For now the app was tested only on Windows 11 with 3 monitors (each 1920 x 1080 with 100% of scale)
 
-The script also requires specific Windows taskbar setting (mostly because the script is clicking at specific regions...):
+1. The script also requires specific Windows taskbar setting (mostly because the script is clicking at specific regions...):
 - Search : Hide
 - Task view : On
 - Widgets : Off
@@ -14,11 +14,13 @@ The script also requires specific Windows taskbar setting (mostly because the sc
     - Automatically hide the taskbar : Unchecked
     - When using multiple displays, show my taskbar apps on : Taskbar where window is open
 
-Provide also the monitors config to `config.ini`
+2. Download the content of `release` directory.
+3. Provide also the monitors config to `config.ini`
 ```
 [multi_monitor_tool]
 monitors = "[{width: 1920, height: 1080, taskbar_left_padding: 10, taskbar_icon_size: 45},{width: 1920, height: 1080, taskbar_left_padding: 10, taskbar_icon_size: 45},{width: 1920, height: 1080, taskbar_left_padding: 10, taskbar_icon_size: 45}]"
 ```
+4. Run `multi_monitor_tool.exe` and test it out.
 
 If more people will like to use that tool then we can work together to make it more flexible :D 
 
