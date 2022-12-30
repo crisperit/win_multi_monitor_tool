@@ -105,7 +105,7 @@ ShowStartOnCursorMonitor()
    monitor_data := GetMonitorDataUnderMouse(mouse_start_x)
 
    DllCall("SetCursorPos", "int", monitor_data.start_x + monitor_data.taskbar_left_padding + monitor_data.taskbar_icon_size/2, "int", monitor_data.height-monitor_data.taskbar_icon_size/2)
-   LeftClick()
+   MouseClick("left")
    DllCall("SetCursorPos", "int", mouse_start_x, "int", mouse_start_y)
 }
 
@@ -116,7 +116,7 @@ ShowTaskViewOnCursorMonitor()
    monitor_data := GetMonitorDataUnderMouse(mouse_start_x)
 
    DllCall("SetCursorPos", "int", monitor_data.start_x + monitor_data.taskbar_left_padding + 1.5 * monitor_data.taskbar_icon_size , "int", monitor_data.height-monitor_data.taskbar_icon_size/2)
-   LeftClick()
+   MouseClick("left")
    DllCall("SetCursorPos", "int", mouse_start_x, "int", mouse_start_y)
 }
 
@@ -129,7 +129,7 @@ SwitchToTaskOnCursorMonitor(hot_key)
    monitor_data := GetMonitorDataUnderMouse(mouse_start_x)
 
    DllCall("SetCursorPos", "int", monitor_data.start_x + monitor_data.taskbar_left_padding + 1.5 * monitor_data.taskbar_icon_size + task_nr * monitor_data.taskbar_icon_size, "int", monitor_data.height-monitor_data.taskbar_icon_size/2)
-   LeftClick()
+   MouseClick("left")
    DllCall("SetCursorPos", "int", mouse_start_x, "int", mouse_start_y)
 }
 
@@ -196,10 +196,4 @@ GetMonitorDataUnderMouse(mouse_x) {
       monitor_start_x := monitor_start_x + monitor.width
    }
 return {start_x:monitor_start_x, index:monitor_index, width:monitor_width, height:monitor_height, taskbar_left_padding: monitor_taskbar_left_padding, taskbar_icon_size: monitor_taskbar_icon_size}
-}
-
-LeftClick() {
-   Click "Down"
-   Sleep 5
-   Click "Up"
 }
