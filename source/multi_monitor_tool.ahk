@@ -39,6 +39,7 @@ CaptureShellMessage(wParam, lParam, msg, hwnd)
       windowID := "ahk_id " lParam
       if WinWaitActive(windowID, , 5) {
          try {
+            cl := WinGetClass(windowID)
             MouseGetPos &mouseStartX, &mouseStartY
             monitorData := GetMonitorDataUnderMouse(mouseStartX)
             WinGetPos(&windowX, &windowY, &windowWidth, &windowHeight, windowID)
@@ -49,7 +50,10 @@ CaptureShellMessage(wParam, lParam, msg, hwnd)
             if minMax == 1 {
                WinRestore(windowID)
             }
-            WinMove(newWindowX,newWindowY,windowWidth,windowHeight, windowID)
+            if cl != "RAIL_WINDOW" {
+               WinMove(newWindowX,newWindowY,windowWidth,windowHeight, windowID) 
+            }
+
             if minMax == 1 {
                WinMaximize(windowID)
             }

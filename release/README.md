@@ -19,6 +19,7 @@ For now the app was tested only on Windows 11 with 3 monitors (each 1920 x 1080 
     - Taskbar alignment : Left
     - Automatically hide the taskbar : Unchecked
     - When using multiple displays, show my taskbar apps on : Taskbar where window is open
+- Keep 100% scaling on all screens
 
 2. Download the content of `release` directory.
 3. Run `multi_monitor_tool.exe` and test it out.
