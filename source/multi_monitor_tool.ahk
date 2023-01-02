@@ -4,36 +4,22 @@ ProcessSetPriority("High")
 CoordMode "Mouse", "Screen"
 DetectHiddenWindows(1)
 
-monitors := IniReadArrayOfObjects("config.ini", "multi_monitor_tool", "monitors")
+MonitorInfos := GetMonitorInfos()
+TaskbarIconSize := 45
+TaskbarLeftPadding := 10
 
-IniReadArrayOfObjects(config_filename, section, key) {
-   result := []
-   raw_array := IniRead(config_filename, section, key)
-
-   pos := 1
-   array_of_raw_objects := []
-   while found := RegExMatch(raw_array, "{.*?}", &match_data, pos) {
-      array_of_raw_objects.Push(match_data["0"])
-      pos := found + StrLen(match_data["0"])
-   }
-
-   for i, raw_object in array_of_raw_objects {
-      obj := Map()
-      obj.CaseSense := "Off"
-      obj.__get := (this, p*) => this.get(p*)
-
-      raw_object := LTrim(raw_object, "{")
-      raw_object := RTrim(raw_object, "}")
-      obj_pairs := StrSplit(raw_object, ",", " `t")
-      for i, obj_pair in obj_pairs {
-         obj_key_value := StrSplit(obj_pair, ":", " `t")
-         key := obj_key_value[1]
-         value := obj_key_value[2]
-         obj[key] := value
-      }
-      result.Push(obj)
-   }
-   return result
+GetMonitorInfos() {
+   local monitorCount := MonitorGetCount()
+   local monitorPrimary := MonitorGetPrimary()
+   local monitorInfos := []
+   Loop monitorCount
+   {
+      MonitorGet A_Index, &l, &t, &r, &b
+      MonitorGetWorkArea A_Index, &wl, &wt, &wr, &wb
+      monitorInfo := {StartX: l, Width: r-l, Height: b-t}
+      monitorInfos.Push(monitorInfo)
+   } 
+   return monitorInfos
 }
 
 HookShellEvent() 
@@ -50,40 +36,37 @@ HookShellEvent(){
 CaptureShellMessage(wParam, lParam, msg, hwnd)
 {
    if ( wParam = 1 ) { 
-      window_id := "ahk_id " lParam
-      if WinWaitActive(window_id, , 5) {
-         WinHide(window_id)
-         MouseGetPos &mouse_start_x, &mouse_start_y
-         monitor_data := GetMonitorDataUnderMouse(mouse_start_x)
-         WinGetPos(&window_x, &window_y, &window_width, &window_height, window_id)
-         min_max := WinGetMinMax(window_id)
+      windowID := "ahk_id " lParam
+      if WinWaitActive(windowID, , 5) {
+         try {
+            MouseGetPos &mouseStartX, &mouseStartY
+            monitorData := GetMonitorDataUnderMouse(mouseStartX)
+            WinGetPos(&windowX, &windowY, &windowWidth, &windowHeight, windowID)
+            local minMax := WinGetMinMax(windowID)
 
-         new_window_x := Floor(monitor_data.start_x+(monitor_data.width - window_width)/2)
-         new_window_y := Floor((monitor_data.height - window_height)/2)
-         if min_max == 1 {
-            WinRestore(window_id)
-         }
-         WinMove(new_window_x,new_window_y,window_width,window_height, window_id)
-         if min_max == 1 {
-            WinMaximize(window_id)
-         }
-         WinShow(window_id)
+            newWindowX := Floor(monitorData.startX+(monitorData.width - windowWidth)/2)
+            newWindowY := Floor((monitorData.height - windowHeight)/2)
+            if minMax == 1 {
+               WinRestore(windowID)
+            }
+            WinMove(newWindowX,newWindowY,windowWidth,windowHeight, windowID)
+            if minMax == 1 {
+               WinMaximize(windowID)
+            }
+         } catch Error as err {
 
+         }
       }
    }
 
 }
 
-for i, monitor in monitors {
-   Hotkey "<#" . i, MoveCursorToMonitor
-}
-
 loop 7 {
-   Hotkey "!" . A_Index, SwitchToTaskOnCursorMonitor
+   Hotkey "<#" . A_Index, SwitchToTaskOnCursorMonitor
 }
 
-<#Right::MoveCursorToNextMonitor()
-<#Left::MoveCursorToPreviousMonitor()
+<#F3::MoveCursorToNextMonitor()
+<#F2::MoveCursorToPreviousMonitor()
 
 ~LWin::Send "{Blind}{vkE8}"
 
@@ -100,100 +83,88 @@ return
 
 ShowStartOnCursorMonitor()
 {
-   local mouse_start_x, mouse_start_y
-   MouseGetPos &mouse_start_x, &mouse_start_y
-   monitor_data := GetMonitorDataUnderMouse(mouse_start_x)
+   local mouseStartX, mouseStartY
+   MouseGetPos &mouseStartX, &mouseStartY
+   monitorData := GetMonitorDataUnderMouse(mouseStartX)
 
-   DllCall("SetCursorPos", "int", monitor_data.start_x + monitor_data.taskbar_left_padding + monitor_data.taskbar_icon_size/2, "int", monitor_data.height-monitor_data.taskbar_icon_size/2)
+   DllCall("ShowCursor", "uint",0)
+   DllCall("SetCursorPos", "int", monitorData.startX + monitorData.taskbarLeftPadding + monitorData.taskbarIconSize/2, "int", monitorData.height-monitorData.taskbarIconSize/2)
    MouseClick("left")
-   DllCall("SetCursorPos", "int", mouse_start_x, "int", mouse_start_y)
+   DllCall("SetCursorPos", "int", mouseStartX, "int", mouseStartY)
+   DllCall("ShowCursor", "uint",1)
 }
 
 ShowTaskViewOnCursorMonitor()
 {
-   local mouse_start_x, mouse_start_y
-   MouseGetPos &mouse_start_x, &mouse_start_y
-   monitor_data := GetMonitorDataUnderMouse(mouse_start_x)
+   local mouseStartX, mouseStartY
+   MouseGetPos &mouseStartX, &mouseStartY
+   monitorData := GetMonitorDataUnderMouse(mouseStartX)
 
-   DllCall("SetCursorPos", "int", monitor_data.start_x + monitor_data.taskbar_left_padding + 1.5 * monitor_data.taskbar_icon_size , "int", monitor_data.height-monitor_data.taskbar_icon_size/2)
+   DllCall("ShowCursor", "uint",0)
+   DllCall("SetCursorPos", "int", monitorData.startX + monitorData.taskbarLeftPadding + 1.5 * monitorData.taskbarIconSize , "int", monitorData.height-monitorData.taskbarIconSize/2)
    MouseClick("left")
-   DllCall("SetCursorPos", "int", mouse_start_x, "int", mouse_start_y)
+   DllCall("SetCursorPos", "int", mouseStartX, "int", mouseStartY)
+   DllCall("ShowCursor", "uint",1)
 }
 
-SwitchToTaskOnCursorMonitor(hot_key)
+SwitchToTaskOnCursorMonitor(shortcut)
 {
-   RegExMatch(hot_key, "[0-9]", &match_data)
-   task_nr := Integer(match_data[0])
-   local mouse_start_x, mouse_start_y
-   MouseGetPos &mouse_start_x, &mouse_start_y
-   monitor_data := GetMonitorDataUnderMouse(mouse_start_x)
+   RegExMatch(shortcut, "[0-9]", &matchingData)
+   taskNR := Integer(matchingData[0])
+   local mouseStartX, mouseStartY
+   MouseGetPos &mouseStartX, &mouseStartY
+   monitorData := GetMonitorDataUnderMouse(mouseStartX)
 
-   DllCall("SetCursorPos", "int", monitor_data.start_x + monitor_data.taskbar_left_padding + 1.5 * monitor_data.taskbar_icon_size + task_nr * monitor_data.taskbar_icon_size, "int", monitor_data.height-monitor_data.taskbar_icon_size/2)
+   DllCall("ShowCursor", "uint",0)
+   DllCall("SetCursorPos", "int", monitorData.startX + monitorData.taskbarLeftPadding + 1.5 * monitorData.taskbarIconSize + taskNR * monitorData.taskbarIconSize, "int", monitorData.height-monitorData.taskbarIconSize/2)
    MouseClick("left")
-   DllCall("SetCursorPos", "int", mouse_start_x, "int", mouse_start_y)
-}
-
-MoveCursorToMonitor(hot_key)
-{
-   RegExMatch(hot_key, "[0-9]", &match_data)
-   monitor_index := Integer(match_data[0]) - 1
-   local mouse_start_x, mouse_start_y
-   MouseGetPos &mouse_start_x, &mouse_start_y
-   monitor_data := GetMonitorDataUnderMouse(mouse_start_x)
-
-   if(monitor_index == monitor_data.index) {
-      return
-   }
-
-   DllCall("SetCursorPos", "int", monitor_index*monitor_data.width+monitor_data.width/2, "int", monitor_data.height/2)
+   DllCall("SetCursorPos", "int", mouseStartX, "int", mouseStartY)
+   DllCall("ShowCursor", "uint",1)
 }
 
 MoveCursorToNextMonitor()
 {
-   local mouse_start_x, mouse_start_y
-   MouseGetPos &mouse_start_x, &mouse_start_y
-   monitor_data := GetMonitorDataUnderMouse(mouse_start_x)
+   local mouseStartX, mouseStartY
+   MouseGetPos &mouseStartX, &mouseStartY
+   monitorData := GetMonitorDataUnderMouse(mouseStartX)
 
-   if(monitors.Length == monitor_data.index+1) {
+   if(MonitorInfos.Length == monitorData.index+1) {
       return
    }
 
-   DllCall("SetCursorPos", "int", (monitor_data.index+1)*monitor_data.width+monitor_data.width/2, "int", monitor_data.height/2)
+   DllCall("SetCursorPos", "int", (monitorData.index+1)*monitorData.width+monitorData.width/2, "int", monitorData.height/2)
 }
 
 MoveCursorToPreviousMonitor()
 {
-   local mouse_start_x, mouse_start_y
-   MouseGetPos &mouse_start_x, &mouse_start_y
-   monitor_data := GetMonitorDataUnderMouse(mouse_start_x)
+   local mouseStartX, mouseStartY
+   MouseGetPos &mouseStartX, &mouseStartY
+   monitorData := GetMonitorDataUnderMouse(mouseStartX)
 
-   if(monitor_data.index == 0) {
+   if(monitorData.index == 0) {
       return
    }
 
-   DllCall("SetCursorPos", "int", (monitor_data.index-1)*monitor_data.width+monitor_data.width/2, "int", monitor_data.height/2)
+   DllCall("SetCursorPos", "int", (monitorData.index-1)*monitorData.width+monitorData.width/2, "int", monitorData.height/2)
 }
 
-GetMonitorDataUnderMouse(mouse_x) {
-   monitor_start_x := 0
-   monitor_index := 0
-   monitor_width := 0
-   monitor_height := 0
-   monitor_height := 0
-   monitor_height := 0
-   monitor_taskbar_left_padding := 10
-   monitor_taskbar_icon_size := 45
+GetMonitorDataUnderMouse(mouseX) {
+   local monitorStartX := 0
+   local monitorIndex := 0
+   local monitorWidth := 0
+   local monitorHeight := 0
+   local monitorTaskbarLeftPadding := taskbarLeftPadding
+   local monitorTaskbarIconSize := taskbarIconSize
 
-   for i, monitor in monitors {
-      if mouse_x < monitor_start_x + monitor.width {
-         monitor_index := i - 1
-         monitor_width := monitor.width
-         monitor_height := monitor.height
-         monitor_taskbar_left_padding := monitor.taskbar_left_padding
-         monitor_taskbar_icon_size := monitor.taskbar_icon_size
+   for i, monitorInfo in MonitorInfos {
+      monitorStartX := monitorInfo.StartX
+      monitorIndex := i - 1
+      monitorWidth := monitorInfo.Width
+      monitorHeight := monitorInfo.Height
+
+      if mouseX < monitorStartX+monitorWidth {
          break
       }
-      monitor_start_x := monitor_start_x + monitor.width
    }
-return {start_x:monitor_start_x, index:monitor_index, width:monitor_width, height:monitor_height, taskbar_left_padding: monitor_taskbar_left_padding, taskbar_icon_size: monitor_taskbar_icon_size}
+return {startX:monitorStartX, index:monitorIndex, width:monitorWidth, height:monitorHeight, taskbarLeftPadding: monitorTaskbarLeftPadding, taskbarIconSize: monitorTaskbarIconSize}
 }
