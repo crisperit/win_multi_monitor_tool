@@ -10,4 +10,4 @@ Set of hotkeys & tools to make Windows multi monitor work much better
 - Find a way to calculate taskbar icon sizes - for now it is set to 45px which might not be always correct
 - Part of windows are not moved due to lack of permissions - fix it
 - RAIL_WINDOW window is not behaving correctly during movement
-- Support different scaling on each monitor
+- Add possibility to setup some apps template for each monitor (so specific apps and their locations per window)
